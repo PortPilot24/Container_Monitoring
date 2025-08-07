@@ -1,11 +1,16 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, conlist
 from tensorflow.keras.models import load_model
 import numpy as np
 import os
+# import pandas as pd
+# import glob
 from occupancy_calculator_functional import calculate_current_occupancy
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
+from affiliation_api import router as affiliation_router
+# from llm_summary import generate_occupancy_summary
 
 # ——————————————
 # 0) 모델 파일 경로 확인
@@ -20,6 +25,9 @@ app = FastAPI(
     description="현재 점유율 계산 및 과거 48포인트 기반 향후 3시간 정각 예측 API",
     version="1.3.0"
 )
+
+def root():
+    return {"message": "Affiliation container API is running."}
 # ✅ CORS 미들웨어 설정 추가
 app.add_middleware(
     CORSMiddleware,
@@ -64,7 +72,7 @@ def predict(req: PredictRequest):
     predictions = {}
 
     current_input = base_input.copy()
-    for i in range(3):  # 3개 시점 예측 (1시간 간격)
+    for i in range(6):  # 6개 시점 예측 (1시간 간격)
         try:
             y_hat = model.predict(current_input, verbose=0).flatten()[0]
         except Exception as e:
@@ -85,3 +93,12 @@ def predict(req: PredictRequest):
 @app.get("/api/occupancy", tags=["Occupancy"])
 def get_current_occupancy():
     return calculate_current_occupancy()
+
+'''@app.post("/api/summary", tags=["LLM Summary"])
+def get_summary(req: PredictRequest):
+    summary = generate_occupancy_summary(req.load_history)
+    return {"summary": summary}'''
+    
+# ——————————————
+
+app.include_router(affiliation_router)
