@@ -12,7 +12,7 @@ def get_containers_by_affiliation(affiliation: Optional[str] = Query(None)):
         raise HTTPException(status_code=400, detail="소속 정보를 입력해주세요.")
     
     # 최근 파일로 수정되면 경로, 파일명 수정필요
-    df = pd.read_csv('./터미널 반출입 목록조회_GUEST_2025-07-30_092652(0717~0729).csv', encoding = 'cp949')
+    df = pd.read_csv('./data/터미널 반출입 목록조회_GUEST_2025-08-07_111836.csv', encoding = 'cp949')
     df.columns = df.columns.str.strip()
 
     # ✅ 출력에 사용할 원본 DataFrame은 복사해두고 유지

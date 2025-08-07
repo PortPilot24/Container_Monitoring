@@ -3,14 +3,11 @@ from pydantic import BaseModel, conlist
 from tensorflow.keras.models import load_model
 import numpy as np
 import os
-# import pandas as pd
-# import glob
+import pandas as pd
 from occupancy_calculator_functional import calculate_current_occupancy
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional
 from affiliation_api import router as affiliation_router
-# from llm_summary import generate_occupancy_summary
 
 # ——————————————
 # 0) 모델 파일 경로 확인
@@ -23,11 +20,12 @@ if not os.path.isfile(MODEL_PATH):
 app = FastAPI(
     title="Container Load Forecast API",
     description="현재 점유율 계산 및 과거 48포인트 기반 향후 3시간 정각 예측 API",
-    version="1.3.0"
+    version="1.4.0"
 )
 
 def root():
     return {"message": "Affiliation container API is running."}
+
 # ✅ CORS 미들웨어 설정 추가
 app.add_middleware(
     CORSMiddleware,
@@ -56,13 +54,39 @@ def read_root():
     return {"status": "ok", "message": "Container Load Forecast API is running."}
 
 # ——————————————
-# 5) 예측 API (향후 3시간 정각 시각 예측)
-@app.post("/predict", response_model=PredictMultiResponse, tags=["Forecast"])
-def predict(req: PredictRequest):
+# 5) CSV파일 기반 예측 API (기존 /predict 기능 대체)
+@app.get("/api/predict-from-file", tags=["Forecast"])
+def predict_from_file():
+    filename = "터미널 반출입 목록조회_GUEST_2025-08-07_111836.csv"  # 기본 파일명
+    file_path = os.path.join("data", filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="CSV file not found.")
+
     try:
-        base_input = np.array(req.load_history, dtype=np.float32).reshape(1, 48, 1)
+        df = pd.read_csv(file_path, encoding='cp949')
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid input format: {e}")
+        raise HTTPException(status_code=500, detail=f"CSV 로드 실패: {e}")
+    
+    df.columns = df.columns.str.strip()
+    
+    df["터미널 반입일시"] = pd.to_datetime(df["터미널 반입일시"], errors="coerce")
+    df["터미널 반출일시"] = pd.to_datetime(df["터미널 반출일시"], errors="coerce")
+
+    time_range = pd.date_range(start=df["터미널 반입일시"].min(),
+                               end=df["터미널 반출일시"].max(),
+                               freq="10min")
+
+    max_capacity = 70000
+    load_ratios = []
+    for ts in time_range:
+        count = ((df["터미널 반입일시"] <= ts) &
+                 ((df["터미널 반출일시"].isna()) | (df["터미널 반출일시"] > ts))).sum()
+        load_ratios.append(min(count / max_capacity, 1.0))
+
+    if len(load_ratios) < 48:
+        raise HTTPException(status_code=400, detail="계산된 적재율 포인트가 48개 미만입니다.")
+
+    input_series = np.array(load_ratios[-48:], dtype=np.float32).reshape(1, 48, 1)
 
     now = datetime.now()
     next_hour = now.replace(minute=0, second=0, microsecond=0)
@@ -70,35 +94,20 @@ def predict(req: PredictRequest):
         next_hour += timedelta(hours=1)
 
     predictions = {}
+    current_input = input_series.copy()
 
-    current_input = base_input.copy()
-    for i in range(6):  # 6개 시점 예측 (1시간 간격)
-        try:
-            y_hat = model.predict(current_input, verbose=0).flatten()[0]
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Model prediction error at T+{i}: {e}")
-
-        # 저장
+    for i in range(6):
+        y_hat = model.predict(current_input, verbose=0).flatten()[0]
         timestamp = (next_hour + timedelta(hours=i)).isoformat()
         predictions[timestamp] = round(float(y_hat), 4)
+        current_input = np.append(current_input.flatten()[1:], y_hat).reshape(1, 48, 1)
 
-        # 슬라이딩 입력값 업데이트 (예측값을 다음 입력에 추가)
-        new_input = np.append(current_input.flatten()[1:], y_hat).reshape(1, 48, 1)
-        current_input = new_input
-
-    return PredictMultiResponse(predictions=predictions)
+    return {"filename": filename, "predictions": predictions}
 
 # ——————————————
 # 6) 현재 점유율 계산 API
 @app.get("/api/occupancy", tags=["Occupancy"])
 def get_current_occupancy():
     return calculate_current_occupancy()
-
-'''@app.post("/api/summary", tags=["LLM Summary"])
-def get_summary(req: PredictRequest):
-    summary = generate_occupancy_summary(req.load_history)
-    return {"summary": summary}'''
-    
-# ——————————————
 
 app.include_router(affiliation_router)
