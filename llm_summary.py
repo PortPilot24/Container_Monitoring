@@ -1,39 +1,50 @@
-# # llm_summary.py
-# import openai
-# from typing import List
+# llm_summary.py
+from openai import OpenAI
+from typing import List
 
-# # TODO: API 키 입력 (환경변수 또는 직접 삽입 가능 – 보안 고려 권장)
-# openai.api_key = ""  # 여기에 API 키를 입력하거나 os.environ["OPENAI_API_KEY"]로 설정하세요
+# ✅ 키를 텍스트 파일에서 불러오기
+def load_openai_key_from_file(path="openai_key.txt") -> str:
+    try:
+        with open(path, "r") as f:
+            key = f.read().strip()
+            print("🔐 API 키 로딩 완료 (길이:", len(key), ")")
+            return key
+    except Exception as e:
+        raise RuntimeError(f"❌ API 키 로드 실패: {e}")
 
-# def generate_occupancy_summary(predictions: List[float]) -> str:
-#     """
-#     LLM을 이용해 예측된 점유율 수치를 기반으로 자연어 요약을 생성합니다.
-    
-#     :param predictions: 예측된 점유율 리스트 (0~1 스케일)
-#     :return: 자연어 요약 문자열
-#     """
-#     try:
-#         if not predictions:
-#             return "예측된 점유율 데이터가 없습니다."
+# ✅ OpenAI 클라이언트 인스턴스 생성
+client = OpenAI(api_key=load_openai_key_from_file())
 
-#         scaled_preds = [round(p * 100, 2) for p in predictions]
-#         prompt = (
-#             f"향후 3시간 동안의 컨테이너 장치장 점유율 예측은 다음과 같습니다: {scaled_preds}%. "
-#             "이 데이터를 바탕으로 혼잡도 상태를 요약해서 자연스럽게 설명해주세요. "
-#             "혼잡 여부와 필요한 대응 조치도 함께 언급해주세요."
-#         )
+def generate_occupancy_summary(predictions: List[float]) -> str:
+    print("📥 들어온 예측값:", predictions)
 
-#         response = openai.ChatCompletion.create(
-#             model="gpt-3.5-turbo",  # 또는 "gpt-4"
-#             messages=[
-#                 {"role": "system", "content": "너는 항만 운영 전문가야."},
-#                 {"role": "user", "content": prompt}
-#             ],
-#             max_tokens=200,
-#             temperature=0.7
-#         )
+    if not predictions:
+        return "예측된 점유율 데이터가 없습니다."
 
-#         return response["choices"][0]["message"]["content"]
+    try:
+        scaled_preds = [round(p * 100, 2) for p in predictions]
+        prompt = (
+            f"향후 3시간 동안의 컨테이너 장치장 점유율 예측은 다음과 같습니다: {scaled_preds}%. "
+            "이 데이터를 바탕으로 혼잡도 상태를 요약해서 자연스럽게 설명해주세요. "
+            "혼잡 여부와 필요한 대응 조치도 함께 언급해주세요."
+        )
 
-#     except Exception as e:
-#         return f"⚠️ 요약 생성 중 오류 발생: {e}"
+        print("📡 OpenAI API 요청 중...")
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "너는 항만 운영 전문가야."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=300,
+            temperature=0.7
+        )
+
+        result = response.choices[0].message.content
+        print("✅ 요약 생성 완료:", result)
+        return result
+
+    except Exception as e:
+        print("❌ LLM 호출 실패:", e)
+        raise RuntimeError(f"요약 생성 실패: {e}")

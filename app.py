@@ -8,6 +8,8 @@ from occupancy_calculator_functional import calculate_current_occupancy
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 from affiliation_api import router as affiliation_router
+from llm_summary import generate_occupancy_summary
+from typing import List
 
 # ——————————————
 # 0) 모델 파일 경로 확인
@@ -111,3 +113,15 @@ def get_current_occupancy():
     return calculate_current_occupancy()
 
 app.include_router(affiliation_router)
+# ——————————————
+# 7) 요약 LLM
+class SummaryRequest(BaseModel):
+    predictions: List[float]
+    
+@app.post("/api/summary", tags=["LLM"])
+def get_summary(req: SummaryRequest):
+    try:
+        summary = generate_occupancy_summary(req.predictions)
+        return {"summary": summary}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"LLM 요약 실패: {e}")
