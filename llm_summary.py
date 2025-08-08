@@ -1,19 +1,18 @@
 # llm_summary.py
 from openai import OpenAI
 from typing import List
+import os
+from dotenv import load_dotenv
 
-# ✅ 키를 텍스트 파일에서 불러오기
-def load_openai_key_from_file(path="openai_key.txt") -> str:
-    try:
-        with open(path, "r") as f:
-            key = f.read().strip()
-            print("🔐 API 키 로딩 완료 (길이:", len(key), ")")
-            return key
-    except Exception as e:
-        raise RuntimeError(f"❌ API 키 로드 실패: {e}")
+load_dotenv()
+
+# ✅ 환경변수에서 API 키 불러오기
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError("❌ OPENAI_API_KEY가 .env에서 로드되지 않았습니다.")
 
 # ✅ OpenAI 클라이언트 인스턴스 생성
-client = OpenAI(api_key=load_openai_key_from_file())
+client = OpenAI(api_key=api_key)
 
 def generate_occupancy_summary(predictions: List[float]) -> str:
     print("📥 들어온 예측값:", predictions)
