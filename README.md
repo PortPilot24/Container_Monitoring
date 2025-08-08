@@ -8,18 +8,20 @@
 ## 🚀 실행 방법
 
 1. **API Key 설정**
-
 - .env파일 생성
 - OPENAI_API_KEY='자신의 api key 입력'
 - .gitignore 파일에 .env 삽입
 
 2. **필요 라이브러리 설치**
-
-
+- pandas
+- fastapi
+- pydantic
+- tensorflow
+- numpy
+- typing
 
 3. **FastAPI 실행**
-
-
+- uvicorn app:app --reload
 
 ## 📊 모델 성능 요약
 
