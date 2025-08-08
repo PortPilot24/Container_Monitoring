@@ -9,7 +9,9 @@
 
 1. **API Key 설정**
 
-api_key.txt파일로 별도 관리 후 txt파일로 불러와서 입력
+.env파일 생성
+OPENAI_API_KEY='자신의 api key 입력'
+.gitignore 파일에 .env 삽입
 
 2. **필요 라이브러리 설치**
 
