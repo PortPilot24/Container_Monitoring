@@ -10,9 +10,9 @@
 ## 실행 방법
 
 1. **API Key 설정**
--1 env파일 생성
--2 OPENAI_API_KEY='자신의 api key 입력'
--3 .gitignore 파일에 .env 삽입
+- env파일 생성
+- OPENAI_API_KEY='자신의 api key 입력'
+- .gitignore 파일에 .env 삽입
 
 2. **필요 라이브러리 설치**
 - pandas
