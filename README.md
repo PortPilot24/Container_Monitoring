@@ -36,7 +36,7 @@
  ├── .env               # openai의 api키 삽입 등의 환경변
  ├── .gitignore
  ├── affiliation_api.py # 사용자의 소속에 맞는 컨테이너의 상황만 필터링 하여 출력
- ├── app.py             # FastAPI 어플리케이션 정의 및 모델을 통한 예측 실행
+ ├── app.py             # FastAPI 어플리케이션 정의 및 데이터 전처리, 예측 실행
  ├── llm_summary.py     # 예측된 내용을 바탕으로 이후 상황을 브리핑해주는 생성형 ai
  ├── occupancy_calculator_functional.py # 현재 장치장 점유율의 상황을 계산
  ├── README.md
@@ -80,10 +80,3 @@
 
 ---
 
-## 📮 향후 개선 방향
-
-- 물류 및 항만 운영 관련 외부 API 연동 검토
-
-- 실시간 예측 결과를 활용한 **자동 물류 계획 추천 기능** 추가
-
-- **서버리스 환경 배포(AWS Lambda 등)** 및 모바일 클라이언트 연계
