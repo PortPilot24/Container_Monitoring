@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    container_name: my-backend
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build: .
+    container_name: my-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

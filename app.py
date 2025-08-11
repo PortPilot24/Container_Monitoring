@@ -31,7 +31,7 @@ def root():
 # ✅ CORS 미들웨어 설정 추가
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # 프론트 호스트 허용
+    allow_origins=["http://localhost:*"],  # 프론트 호스트 허용
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
