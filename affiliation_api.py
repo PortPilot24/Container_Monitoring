@@ -6,7 +6,7 @@ import numpy as np
 
 router = APIRouter()
 
-@router.get("/api/containers-by-affiliation")
+@router.get("/container-monitoring/containers-by-affiliation")
 def get_containers_by_affiliation(affiliation: Optional[str] = Query(None)):
     if not affiliation:
         raise HTTPException(status_code=400, detail="소속 정보를 입력해주세요.")

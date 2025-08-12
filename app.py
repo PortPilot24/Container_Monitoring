@@ -57,7 +57,7 @@ def read_root():
 
 # ——————————————
 # 5) CSV파일 기반 예측 API (기존 /predict 기능 대체)
-@app.get("/api/predict-from-file", tags=["Forecast"])
+@app.get("/container-monitoring/predict-from-file", tags=["Forecast"])
 def predict_from_file():
     filename = "터미널 반출입 목록조회_GUEST_2025-08-07_111836.csv"  # 기본 파일명
     file_path = os.path.join("data", filename)
@@ -108,7 +108,7 @@ def predict_from_file():
 
 # ——————————————
 # 6) 현재 점유율 계산 API
-@app.get("/api/occupancy", tags=["Occupancy"])
+@app.get("/container-monitoring/occupancy", tags=["Occupancy"])
 def get_current_occupancy():
     return calculate_current_occupancy()
 

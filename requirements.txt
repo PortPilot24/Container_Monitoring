@@ -1,4 +1,4 @@
-python-dotenv>=1.0.1           # (필요시)
+python-dotenv==1.0.1           # (필요시)
 fastapi==0.112.1
 uvicorn[standard]==0.30.3
 pydantic==2.8.2                 # FastAPI 0.112.x 호환
