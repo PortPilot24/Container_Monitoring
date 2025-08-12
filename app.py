@@ -7,15 +7,17 @@ import pandas as pd
 from occupancy_calculator_functional import calculate_current_occupancy
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
-from affiliation_api import router as affiliation_router
+# from affiliation_api import router as affiliation_router
 from llm_summary import generate_occupancy_summary
-from typing import List
+from typing import List, Optional
+import tensorflow as tf
 
 # ——————————————
 # 0) 모델 파일 경로 확인
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "best_lstm_model.h5")
-if not os.path.isfile(MODEL_PATH):
-    raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
+# MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "best_lstm_model.h5")
+
+# if not os.path.isfile(MODEL_PATH):
+#     raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
 
 # ——————————————
 # 1) FastAPI 앱 생성
@@ -31,7 +33,7 @@ def root():
 # ✅ CORS 미들웨어 설정 추가
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:*"],  # 프론트 호스트 허용
+    allow_origins=["*"],  # 프론트 호스트 허용
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,7 +49,8 @@ class PredictMultiResponse(BaseModel):
 
 # ——————————————
 # 3) 모델 로드
-model = load_model(MODEL_PATH, compile=False)
+MODEL_PATH = "models/best_lstm_model.keras"
+model = tf.keras.models.load_model(MODEL_PATH, compile=False)
 
 # ——————————————
 # 4) 헬스체크
@@ -112,16 +115,47 @@ def predict_from_file():
 def get_current_occupancy():
     return calculate_current_occupancy()
 
-app.include_router(affiliation_router)
+# app.include_router(affiliation_router)
 # ——————————————
 # 7) 요약 LLM
 class SummaryRequest(BaseModel):
     predictions: List[float]
     
-@app.post("/api/summary", tags=["LLM"])
+@app.post("/container-monitoring/summary", tags=["LLM"])
 def get_summary(req: SummaryRequest):
     try:
         summary = generate_occupancy_summary(req.predictions)
         return {"summary": summary}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM 요약 실패: {e}")
+    
+# @app.get("/container-monitoring/affiliation-containers")
+# def get_containers_by_affiliation(affiliation: Optional[str] = Query(None)):
+#     if not affiliation:
+#         raise HTTPException(status_code=400, detail="소속 정보를 입력해주세요.")
+    
+#     # 최근 파일로 수정되면 경로, 파일명 수정필요
+#     df = pd.read_csv('./data/터미널 반출입 목록조회_GUEST_2025-08-07_111836.csv', encoding = 'cp949')
+#     df.columns = df.columns.str.strip()
+
+#     # ✅ 출력에 사용할 원본 DataFrame은 복사해두고 유지
+#     df_output = df.copy()
+
+#     # ✅ 필터링을 위한 임시 컬럼만 별도로 정제
+#     df["선사_정제"] = df["선사"].astype(str).str.strip().str.upper()
+#     affiliation_cleaned = affiliation.strip().upper()
+
+#     # ✅ 조건을 만족하는 index만 추출
+#     matched_idx = df[df["선사_정제"].str.contains(affiliation_cleaned, na=False)].index
+
+#     # ✅ index 기반으로 원본에서 필요한 열만 추출 (원본 '선사'는 그대로 유지)
+#     filtered = df_output.loc[matched_idx, [
+#         "선사", "컨테이너번호", "터미널 반입일시", "터미널 반출일시", "상태", "장치장위치"
+#     ]]
+
+#     # ✅ NaN → None (JSON 직렬화 안전성)
+#     filtered.where(pd.notnull(filtered), None, inplace = True)
+
+#     return {
+#         "containers": filtered.to_dict(orient="records")
+#     }

@@ -34,4 +34,4 @@ EXPOSE 8000
 # 6) 실행
 # ※ 네 프로젝트 구조에 맞춰 "main:app" or "app.main:app"로 바꿔!
 #    (현재 CMD의 "app:app"은 app.py에 app=FastAPI()가 있을 때만 동작)
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

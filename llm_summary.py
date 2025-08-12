@@ -23,7 +23,7 @@ def generate_occupancy_summary(predictions: List[float]) -> str:
     try:
         scaled_preds = [round(p * 100, 2) for p in predictions]
         prompt = (
-            f"향후 3시간 동안의 컨테이너 장치장 점유율 예측은 다음과 같습니다: {scaled_preds}%. "
+            f"향후 6시간 동안의 컨테이너 장치장 점유율 예측은 다음과 같습니다: {scaled_preds}%. "
             "이 데이터를 바탕으로 혼잡도 상태를 요약해서 자연스럽게 설명해주세요. "
             "혼잡 여부와 필요한 대응 조치도 함께 언급해주세요."
         )
