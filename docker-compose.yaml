@@ -1,9 +1,27 @@
 version: "3.9"
 
 services:
-  backend:
-    build: .
-    container_name: my-backend
+  container-monitoring:
+    build: 
+      context: .
+      dockerfile: dockerfile
+    container_name: container-monitoring
     ports:
       - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Seoul
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MODEL_PATH=/app/models/best_lstm_model.keras
+    volumes:
+      - ./models:/app/models:ro
+      - ./logs:/app/logs
     restart: unless-stopped
+    # healthcheck:
+    #   # Dockerfile에 curl 설치되어 있다면 사용 (없으면 아래 주석 참고)
+    #   test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
+    #   interval: 30s
+    #   timeout: 3s
+    #   retries: 3
+    #   start_period: 15s
