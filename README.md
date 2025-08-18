@@ -14,12 +14,14 @@
 - OPENAI_API_KEY='자신의 api key 입력'
 - .gitignore 파일에 .env 삽입
 
-2. **필요 라이브러리 설치**
-- pandas
-- fastapi
-- pydantic
-- tensorflow
-- numpy
+2. **주요 라이브러리**
+- fastapi=0.112.1
+- pydantic=2.8.2
+- tensorflow=2.19.0     #모델 학습에 사용한 버전으로 다른버전 사용 시 에러발생할수도 있음
+- keras=3.10.0          #모델 학습에 사용한 버전으로 다른버전 사용 시 에러발생할수도 있음
+- numpy=2.3.2           #tesnorflow와 호환버전
+- pandas=2.1.3          #numpy와 호환버전
+- scikit-learn          #numpy와 호환버전
 - typing
 
 3. **FastAPI 실행**
