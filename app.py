@@ -7,7 +7,7 @@ import pandas as pd
 from occupancy_calculator_functional import calculate_current_occupancy
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
-# from affiliation_api import router as affiliation_router
+from affiliation_api import router as affiliation_router
 from llm_summary import generate_occupancy_summary
 from typing import List, Optional
 import tensorflow as tf
@@ -128,6 +128,10 @@ def get_summary(req: SummaryRequest):
         return {"summary": summary}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM 요약 실패: {e}")
+    
+@app.get("/")
+def root():
+    return {"message": "API running"}
     
 @app.get("/container-monitoring/affiliation-containers")
 def get_containers_by_affiliation(affiliation: Optional[str] = Query(None)):
